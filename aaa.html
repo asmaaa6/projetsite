@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Gallery with Curtain Transition</title>
+  <style>
+    /* Style global du body */
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Conteneur principal de l'image */
+    .image-container {
+      position: relative;
+      width: 1000px;
+      height: 450px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid #333;
+      background: black; /* Fond noir derrière les images */
+    }
+
+    /* Les images dans le conteneur */
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(100%); /* Initialement hors de l'écran (à droite) */
+      transition: opacity 1.5s ease-out, transform 1.5s ease-out; /* Transition plus lente avec déplacement */
+    }
+
+    .image-container img.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0); /* L'image se déplace vers sa position initiale */
+    }
+
+    /* Effet sombre pendant la transition (overlay ultra rapide) */
+    .image-container .overlay-dark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      transform: translateX(100%); /* L'overlay commence hors de l'écran à droite */
+      transition: transform 0.2s ease-out;
+      z-index: 2;
+    }
+
+    .image-container .overlay-dark.active {
+      transform: translateX(0); /* L'overlay glisse vers l'écran */
+    }
+
+    /* Boutons gauche et droite avec bord arrondi */
+    .prev, .next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      padding: 15px;
+      cursor: pointer;
+      font-size: 24px;
+      z-index: 10;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .prev {
+      left: 10px;
+    }
+
+    .next {
+      right: 10px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Conteneur de l'image principale -->
+  <div class="image-container">
+    <img src="imageacceuil.jpeg" alt="Image 1" class="image">
+    <img src="imagesyolo.jpeg" alt="Image 2" class="image">
+    <img src="imageacceuil.jpeg" alt="Image 3" class="image">
+    <img src="imagesyolo.jpeg" alt="Image 4" class="image">
+    
+    <!-- Effet sombre de type rideau pendant la transition -->
+    <div class="overlay-dark"></div>
+
+    <!-- Boutons gauche et droite pour changer d'image -->
+    <button class="prev" aria-label="Previous Image">&#10094;</button>
+    <button class="next" aria-label="Next Image">&#10095;</button>
+  </div>
+
+  <script>
+    const images = document.querySelectorAll('.image-container img');
+    const overlayDark = document.querySelector('.overlay-dark');
+    const prevButton = document.querySelector('.prev');
+    const nextButton = document.querySelector('.next');
+    let currentIndex = 0;
+    let autoChangeInterval;
+
+    // Fonction pour afficher l'image active avec transition et un seul aller du rideau
+    function showImage(index) {
+      const currentImage = images[currentIndex];
+
+      // Étape 1 : L'ancienne image disparaît
+      currentImage.style.opacity = 0;
+      currentImage.style.transform = 'translateX(-100%)'; // L'image sort à gauche (ou à droite selon votre préférence)
+
+      // Étape 2 : Activation de l'overlay sombre pour un aller unique
+      overlayDark.classList.add('active');
+
+      // Étape 3 : La nouvelle image devient visible après un délai
+      setTimeout(() => {
+        const nextImage = images[index];
+        nextImage.classList.add('active');
+        nextImage.style.opacity = 1;
+        nextImage.style.transform = 'translateX(0)'; // L'image glisse depuis la droite
+
+        // Après un court délai, retirer l'overlay sombre
+        setTimeout(() => {
+          overlayDark.classList.remove('active');
+        }, 200); // Retirer l'overlay après 200ms
+      }, 600); // Délai avant de commencer à afficher la nouvelle image
+
+      // Mise à jour de l'index actuel
+      currentIndex = index;
+    }
+
+    // Initialiser la première image
+    showImage(currentIndex);
+
+    // Réinitialiser l'auto-changement
+    function resetAutoChange() {
+      clearInterval(autoChangeInterval);
+      autoChangeInterval = setInterval(autoChangeImage, 30000); // 30 secondes
+    }
+
+    // Bouton précédent
+    prevButton.addEventListener('click', () => {
+      clearInterval(autoChangeInterval);
+      const previousIndex = (currentIndex - 1 + images.length) % images.length;
+      showImage(previousIndex);
+      resetAutoChange();
+    });
+
+    // Bouton suivant
+    nextButton.addEventListener('click', () => {
+      clearInterval(autoChangeInterval);
+      const nextIndex = (currentIndex + 1) % images.length;
+      showImage(nextIndex);
+      resetAutoChange();
+    });
+
+    // Changement automatique d'image
+    function autoChangeImage() {
+      const nextIndex = (currentIndex + 1) % images.length;
+      showImage(nextIndex);
+    }
+
+    // Auto-changement toutes les 30 secondes
+    autoChangeInterval = setInterval(autoChangeImage, 30000);
+  </script>
+
+</body>
+</html>
